@@ -1,7 +1,6 @@
-#!/usr/bin/env -S PATH="${PATH}:/Users/${USER}/miniconda3/bin/" python3
+#!/usr/bin/env -S PATH="${PATH}:/Users/${USER}/miniconda3/bin/" LC_ALL=en_US.UTF-8 python3
+# -*- coding: utf-8 -*-
 
-# coding=utf-8
-#
 # <bitbar.title>Sunset Time</bitbar.title>
 # <bitbar.version>v2.0</bitbar.version>
 # <bitbar.author>bcongdon</bitbar.author>
@@ -14,6 +13,8 @@ from pytz import timezone
 from datetime import datetime
 import json
 import time
+import sys
+import codecs
 
 ip_url = "http://ip-api.com/json"
 
@@ -24,6 +25,13 @@ def datetime_from_utc_to_local(utc_datetime):
         now_timestamp
     )
     return utc_datetime + offset
+
+
+def parse_utc_timestamp(utc_timestamp):
+    date, tzoffset = utc_timestamp.split("+")
+    # Python doesn't support colons in the tz offset
+    tzoffset = tzoffset.replace(":", "")
+    return datetime.strptime("{}+{}".format(date, tzoffset), "%Y-%m-%dT%H:%M:%S%z")
 
 
 try:
@@ -50,8 +58,8 @@ if payload.get("status") != "OK":
     print("Got bad response from API")
     exit(1)
 
-sunset = datetime.strptime(payload.get("results").get("sunset"), "%Y-%m-%dT%H:%M:%S%z")
+sunset = parse_utc_timestamp(payload.get("results").get("sunset"))
 sunset_str = datetime_from_utc_to_local(sunset).strftime("%I:%M%p")
 if sunset_str.startswith("0"):
     sunset_str = sunset_str[1:]
-print("🌅" + sunset_str)
+print(u"🌅 {}".format(sunset_str))
