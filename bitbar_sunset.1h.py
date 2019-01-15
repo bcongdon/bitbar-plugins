@@ -9,6 +9,7 @@
 # <bitbar.dependencies>python</bitbar.dependencies>
 
 import urllib.request
+import pytz
 from pytz import timezone
 from datetime import datetime
 import json
@@ -31,7 +32,10 @@ def parse_utc_timestamp(utc_timestamp):
     date, tzoffset = utc_timestamp.split("+")
     # Python doesn't support colons in the tz offset
     tzoffset = tzoffset.replace(":", "")
-    return datetime.strptime("{}+{}".format(date, tzoffset), "%Y-%m-%dT%H:%M:%S%z")
+    parsed_date = datetime.strptime(
+        "{}+{}".format(date, tzoffset), "%Y-%m-%dT%H:%M:%S%z"
+    )
+    return parsed_date
 
 
 try:
@@ -43,8 +47,9 @@ except IOError as e:
 payload = json.loads(r)
 lat, lon = payload.get("lat"), payload.get("lon")
 
-sun_api_url = "https://api.sunrise-sunset.org/json?lat={}&lng={}&formatted=0".format(
-    lat, lon
+current_date = datetime.now().date().isoformat()
+sun_api_url = "https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatted=0".format(
+    lat, lon, current_date
 )
 
 try:
@@ -62,4 +67,11 @@ sunset = parse_utc_timestamp(payload.get("results").get("sunset"))
 sunset_str = datetime_from_utc_to_local(sunset).strftime("%I:%M%p")
 if sunset_str.startswith("0"):
     sunset_str = sunset_str[1:]
-print(u"🌅 {}".format(sunset_str))
+
+now = pytz.utc.localize(datetime.utcnow())
+until_sunset = sunset - now
+hours = until_sunset.seconds / 3600
+
+# Only display if sunset is within 2 hours or has passed in last ~1 hour
+if (sunset < now and abs(24 - hours) <= 2) or abs(24 - hours) <= 1:
+    print(u"🌅 {}".format(sunset_str))
