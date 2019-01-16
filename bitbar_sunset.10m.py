@@ -41,8 +41,7 @@ def parse_utc_timestamp(utc_timestamp):
 try:
     r = urllib.request.urlopen(ip_url).read()
 except IOError as e:
-    print("Unable to get location")
-    exit(1)
+    raise("Unable to get location")
 
 payload = json.loads(r)
 lat, lon = payload.get("lat"), payload.get("lon")
@@ -55,13 +54,11 @@ sun_api_url = "https://api.sunrise-sunset.org/json?lat={}&lng={}&date={}&formatt
 try:
     response = urllib.request.urlopen(sun_api_url).read()
 except IOError as e:
-    print("Unable to contact Sunset API")
-    exit(1)
+    raise("Unable to contact Sunset API")
 
 payload = json.loads(response)
 if payload.get("status") != "OK":
-    print("Got bad response from API")
-    exit(1)
+    raise("Got bad response from API")
 
 sunset = parse_utc_timestamp(payload.get("results").get("sunset"))
 sunset_str = datetime_from_utc_to_local(sunset).strftime("%I:%M%p")
