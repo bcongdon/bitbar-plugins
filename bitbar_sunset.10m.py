@@ -69,6 +69,6 @@ now = pytz.utc.localize(datetime.utcnow())
 until_sunset = sunset - now
 hours = until_sunset.seconds / 3600
 
-# Only display if sunset is within 2 hours or has passed in last ~1 hour
-if (sunset < now and abs(24 - hours) <= 2) or abs(24 - hours) <= 1:
+# Only display if sunset is within the next 2 hours or has passed in last ~1 hour
+if (now < sunset and abs(24 - hours) <= 2) or abs(24 - hours) <= 1:
     print(u"🌅 {}".format(sunset_str))
